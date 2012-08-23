@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="hello">Begin Time:</string>
+    <string name="app_name">RuninTest</string>
+    <string name="begintime">Begin Time:</string>
+    <string name="currenttime">Current Time:</string>
+    <string name="passedtime">Run Time:</string>
+    <string name="status">Pass</string>
+    
+        
+</resources>

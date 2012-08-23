@@ -1,0 +1,9 @@
+v1.0.0 @ 2012/08/23
+*) new features -- First Relase
+	1) Automatic search Video file for Runin Test from "/mnt" directory while opening RuninTest.apk
+	2) Press MENU button will popup a menu(Play and Stop), Play for Start Runin Test, Stop for stop runin test
+	3) Runin UI will show Begin time, current time and Run Time
+	4) After 2H, app will show Pass result. show Fail while some error would happened
+	5) Cannot cancel Runin while Video is playing until you press Stop to stop runin test
+	6) Cannot re-play while you press Stop button
+	7) Cannot re-play after Runin Pass
