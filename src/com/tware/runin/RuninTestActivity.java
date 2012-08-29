@@ -98,7 +98,7 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
         				break;
         			case 2:
         				// no video found message
-        				Toast.makeText(getApplicationContext(), "No Video found!", Toast.LENGTH_LONG).show();
+        				Toast.makeText(getApplicationContext(), "Video not found!", Toast.LENGTH_LONG).show();
         				break;
         			case 3:
         				// video found message
@@ -107,7 +107,7 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
         			case 4:
         				// Fail conditions
         				Log.e(TAG, "Got Message for Fail");
-        				setRuninResults(1);  
+        				setRuninResults(1);
         				break;
         			case 5:
         				// Fass conditions
@@ -124,6 +124,7 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
         	{
         		runTime ++;
         		if (hour >= RuninTime)
+//        		if (runTime > 600)
         		{
         			Message msg = new Message();
             		msg.what = 5;
@@ -432,17 +433,19 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
 	
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		if (keyCode == KeyEvent.KEYCODE_BACK) {
-			if (!isStop)
+			if (mPlayer != null && mPlayer.isPlaying())
 			{
 				new AlertDialog.Builder(this)
+				.setIcon(R.drawable.icon)
 				.setTitle("Warning")
-				.setMessage("Under runin, you can't cancel it!")
+				.setMessage("Running, you can't cancel it!")
 				.setCancelable(false)
 				.setPositiveButton("Ok", null).show();
 				return false;
 			}
 			
 			new AlertDialog.Builder(this).setTitle("Exit?")
+				.setIcon(R.drawable.icon)
 				.setMessage("Are you sure to exit Runin?")
 				.setCancelable(false)
 				.setNegativeButton("Cancel", null)
