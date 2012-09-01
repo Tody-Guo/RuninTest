@@ -1,6 +1,9 @@
 package com.tware.runin;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -49,7 +52,7 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
 	private boolean isStop = false;
 	private boolean isPause = false;
 	private boolean isPass = false;
-
+	
 	private String runinVideo = null;
 	private List<String> playList = new ArrayList<String>();
 
@@ -67,6 +70,45 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
         rStatus.setVisibility(View.INVISIBLE);
         
         mPlayer = new MediaPlayer();
+
+        File f = new File("/mnt/sdcard/runin.cfg");
+        if (!f.exists())
+        {
+        	f = new File("/mnt/sdcard/external_sdcard/runin.cfg");
+        }
+        
+        if (f.exists() && f.isFile())
+        {
+        	Log.i(TAG, f.getAbsoluteFile()+ " found");
+        	try {
+        		BufferedReader fr = new BufferedReader(new FileReader(f));
+				String str = fr.readLine();
+				do{
+					if (!str.startsWith("#") && str.trim().length()>= 11 )
+					{
+						break;
+					}											
+				}while((str = fr.readLine())!= null);
+					
+				if (!str.startsWith("#"))
+				{
+					String [] strSplit = new String[20];
+					strSplit = str.split("=");
+					if (strSplit != null && strSplit[0].equalsIgnoreCase("RuninTime"))
+					{
+						RuninTime = Integer.parseInt(strSplit[1].trim());
+					}
+				}
+				
+				fr.close();
+			
+        	} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}catch (IOException e) {
+				e.printStackTrace();
+			}
+        }
+        
         
         this.getWindow().setFormat(PixelFormat.UNKNOWN);
         
@@ -289,8 +331,8 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        menu.add(0, 0, 0, "Play");
-        menu.add(0, 1, 1, "Stop");        
+        menu.add(0, 0, 0, "▶ Play");
+        menu.add(0, 1, 1, "■ Stop");      
         return true;
     }
     
@@ -326,6 +368,10 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
 											mPlayer.getVideoHeight());
 					mPlayer.prepare();
 					mPlayer.start();
+					
+					Toast.makeText(getApplicationContext(), 
+									"Runin Time is " + RuninTime + "H",
+									Toast.LENGTH_LONG).show();
 					
         			Message msg = new Message();
 	    			msg.what = 0;

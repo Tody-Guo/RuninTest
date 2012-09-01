@@ -1,3 +1,8 @@
+v1.0.2 @ 2012/08/31
+	*) add runin.cfg to define the Runin Time, format is RuninTime=3,and file 
+		name runin.cfg must be in lowcase and file location is /mnt/sdcard/ or /mnt/sdcard/external_sdcard
+		
+
 v1.0.1 @ 2012/08/29
 	*) fix cannot exit issue after Runin Pass
 	*) change some error tips describtion
