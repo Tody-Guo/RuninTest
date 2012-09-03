@@ -54,6 +54,7 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
 	private boolean isPass = false;
 	
 	private String runinVideo = null;
+	private String searchPath = "/mnt";
 	private List<String> playList = new ArrayList<String>();
 
 	/** Called when the activity is first created. */
@@ -86,20 +87,21 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
 				do{
 					if (!str.startsWith("#") && str.trim().length()>= 11 )
 					{
-						break;
+						String [] strSplit = new String[20];
+						strSplit = str.split("=");
+						if (strSplit != null && strSplit[0].equalsIgnoreCase("RuninTime"))
+						{
+							Log.i(TAG, "RuninTime defined: " + strSplit[1]);
+							RuninTime = Integer.parseInt(strSplit[1].trim());
+						}
+						else if(strSplit != null && strSplit[0].equalsIgnoreCase("VideoPath"))
+						{
+							Log.i(TAG, "VideoPath defined: " + strSplit[1]);
+							searchPath = strSplit[1].trim();
+						}
 					}											
 				}while((str = fr.readLine())!= null);
-					
-				if (!str.startsWith("#"))
-				{
-					String [] strSplit = new String[20];
-					strSplit = str.split("=");
-					if (strSplit != null && strSplit[0].equalsIgnoreCase("RuninTime"))
-					{
-						RuninTime = Integer.parseInt(strSplit[1].trim());
-					}
-				}
-				
+			
 				fr.close();
 			
         	} catch (FileNotFoundException e) {
@@ -183,7 +185,7 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
         new Thread(){
         	@Override
         	public void run(){
-        		if (!findRuninVideo("/mnt"))
+        		if (!findRuninVideo(searchPath))
         		{
         			Message msg = new Message();
         			msg.what = 2;
