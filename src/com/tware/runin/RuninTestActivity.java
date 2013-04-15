@@ -9,11 +9,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.graphics.Color;
@@ -25,6 +27,7 @@ import android.media.MediaPlayer.OnPreparedListener;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PowerManager;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -39,12 +42,18 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
 	private SurfaceView sv;
 	private MediaPlayer mPlayer;
 	private TextView bTime, cTime, pTime, rStatus;
-	private String TAG = "RuninTest";
+	private PowerManager pm;
+	private PowerManager.WakeLock wl;
 	
+	private final String TAG = "RuninTest";
+	private final String cfgFile = "/mnt/sdcard/runin.cfg";
+	private final String cfgFile1 = "/mnt/sdcard/external_sdcard/runin.cfg";
+	private final String cfgFile2 = "/mnt/sdcard/external_sd/runin.cfg";
+
 	private Handler uHandler;
 	private TimerTask task;
 	private Timer timer = new Timer();;
-	private SimpleDateFormat nowdate = new SimpleDateFormat("HH:mm:ss");
+	private SimpleDateFormat nowdate = new SimpleDateFormat("HH:mm:ss",  Locale.US);
 	private SurfaceHolder sHolder;
 	private int runTime = 0;
 	private int hour = 0;
@@ -69,15 +78,20 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
         pTime = (TextView)findViewById(R.id.view_passed);
         rStatus = (TextView)findViewById(R.id.view_status);
         rStatus.setVisibility(View.INVISIBLE);
-        
-        mPlayer = new MediaPlayer();
 
-        File f = new File("/mnt/sdcard/runin.cfg");
+        pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
+        wl = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
+
+		mPlayer = new MediaPlayer();
+        
+        File f = new File(cfgFile);
         if (!f.exists())
         {
-        	f = new File("/mnt/sdcard/external_sdcard/runin.cfg");
+        	f = new File(cfgFile1);
+        	if (!f.exists())
+        		f = new File(cfgFile2);
         }
-        
+
         if (f.exists() && f.isFile())
         {
         	Log.i(TAG, f.getAbsoluteFile()+ " found");
@@ -170,14 +184,10 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
         		if (hour >= RuninTime)
 //        		if (runTime > 600)
         		{
-        			Message msg = new Message();
-            		msg.what = 5;
-            		uHandler.sendMessage(msg);
+            		uHandler.sendEmptyMessage(5);
         		}else
         		{
-        			Message msg = new Message();
-            		msg.what = 1;
-            		uHandler.sendMessage(msg);
+            		uHandler.sendEmptyMessage(1);
         		}
         	}
         };
@@ -187,15 +197,11 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
         	public void run(){
         		if (!findRuninVideo(searchPath))
         		{
-        			Message msg = new Message();
-        			msg.what = 2;
-        			uHandler.sendMessage(msg);
+            		uHandler.sendEmptyMessage(2);
         		}
         		else
         		{
-        			Message msg = new Message();
-        			msg.what = 3;
-        			uHandler.sendMessage(msg);
+            		uHandler.sendEmptyMessage(3);
         			runinVideo = playList.get(0);
         		}
         		Log.d(TAG, "Thread exit success!");
@@ -207,31 +213,13 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
         	public void onCompletion(MediaPlayer mp)
         	{
         		Log.e(TAG, "onCompletion()");
-        		try {
-        			if(mPlayer!=null)
-        			{
-                		Log.e(TAG, "onCompletion() -> rePlay");
-        				mPlayer.reset();
-        				mPlayer.setDataSource(runinVideo);
-        				mPlayer.prepare();
-        				mPlayer.start();
-        			}
-				} catch (IllegalArgumentException e) {
-        			Message msg = new Message();
-					msg.what = 4;
-					uHandler.sendMessage(msg);
-					e.printStackTrace();
-				} catch (IllegalStateException e) {
-        			Message msg = new Message();
-					msg.what = 4;
-					uHandler.sendMessage(msg);
-					e.printStackTrace();
-				} catch (IOException e) {
-        			Message msg = new Message();
-					msg.what = 4;
-					uHandler.sendMessage(msg);
-					e.printStackTrace();
-				}
+        		if(mPlayer!=null)
+        		{
+                	Log.e(TAG, "onCompletion() -> rePlay");
+                	pausePlay();
+                	stopPlay();
+                	initPlay();
+        		}
         	}
         });
      
@@ -279,13 +267,9 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
 		rStatus.setTextColor(Color.WHITE);
 		rStatus.setTextSize(200);
 		/* Here release MediaPlayer. */
-		if (mPlayer != null)
-		{
-			mPlayer.pause();
-			mPlayer.reset();
-			mPlayer.release();
-			mPlayer = null;
-		}
+
+		pausePlay();
+		stopPlay();
 
 		if (timer != null)
 		{
@@ -344,7 +328,6 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
         switch(item.getItemId())
         {
     		case 0:
-			try {
 				if (isPass)
 				{
 					Toast.makeText(getApplicationContext(), "Runin is Pass! If you want to retest, please reopen this app for Runin!", Toast.LENGTH_LONG).show();
@@ -359,56 +342,25 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
 				if (mPlayer!=null && mPlayer.isPlaying())
 				{
 					Toast.makeText(getApplicationContext(), "Already runin!", Toast.LENGTH_LONG).show();
-					return false;					
+					return false;		
 				}
 				
 				if (mPlayer!=null && runinVideo != null)
 				{
     		        timer.schedule(task, 0, 1000);  /* Now start to Counter */
-					mPlayer.setDataSource(runinVideo);
-					sHolder.setFixedSize(	mPlayer.getVideoWidth(),
-											mPlayer.getVideoHeight());
-					mPlayer.prepare();
+    		        initPlay();
 					mPlayer.start();
-					
+					uHandler.sendEmptyMessage(0);
 					Toast.makeText(getApplicationContext(), 
 									"Runin Time is " + RuninTime + "H",
 									Toast.LENGTH_LONG).show();
-					
-        			Message msg = new Message();
-	    			msg.what = 0;
-	    			uHandler.sendMessage(msg);
 				}
-				else
-				{
-        			Message msg = new Message();
-					msg.what = 2;
-					uHandler.sendMessage(msg);
-				}
-			} catch (IllegalArgumentException e) {
-    			Message msg = new Message();
-				msg.what = 4;
-				uHandler.sendMessage(msg);
-				e.printStackTrace();
-			} catch (IllegalStateException e) {
-    			Message msg = new Message();
-				msg.what = 4;
-				uHandler.sendMessage(msg);
-				e.printStackTrace();
-			} catch (IOException e) {
-    			Message msg = new Message();
-				msg.what = 4;
-				uHandler.sendMessage(msg);
-				e.printStackTrace();
-			}
     			break;
     		case 1:
     			if(mPlayer != null)
     			{
     				isStop =true;
-    				mPlayer.pause();
-    				mPlayer.release();
-    				mPlayer = null;
+    				stopPlay();
     				Toast.makeText(getApplicationContext(), "You've  stoped it succeessfully!", Toast.LENGTH_LONG).show();
     			}
     			else
@@ -445,6 +397,85 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
 		Log.e(TAG, "surfaceDestroyed");
 	}
     
+	public void pausePlay()
+	{
+		if (mPlayer.isPlaying() && mPlayer!=null)
+		{
+			Log.e(TAG, "from pausePlay()");
+			mPlayer.pause();
+			mPlayer.release();
+			mPlayer = null;
+		}
+	}
+	
+	public void stopPlay()
+	{
+		Log.e(TAG, "from stopPlay()");
+		if (mPlayer!=null)
+		{
+			mPlayer.stop();
+			mPlayer.release();
+			mPlayer = null;
+		}
+	}
+
+	public void initPlay()
+	{
+		Log.e(TAG, "from initPlay()");
+		if (mPlayer==null){
+			Log.e(TAG, "from initPlay() --> new MediaPlayer...");
+			
+			mPlayer = new MediaPlayer();
+			
+			mPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+			mPlayer.setDisplay(sHolder);
+			
+	        mPlayer.setOnCompletionListener(new OnCompletionListener(){
+	        	@Override
+	        	public void onCompletion(MediaPlayer mp)
+	        	{
+	        		Log.e(TAG, "onCompletion()");
+	        		if(mPlayer!=null)
+	        		{
+	                	Log.e(TAG, "onCompletion() -> rePlay");
+	                	pausePlay();
+	                	stopPlay();
+	                	initPlay();
+	        		}
+	        	}
+	        });
+	        
+	        mPlayer.setOnPreparedListener(new OnPreparedListener(){
+	        	@Override
+	        	public void onPrepared(MediaPlayer mp)
+	        	{
+	        		Log.e(TAG, "onPrepared");
+	        		if (mPlayer!=null && !mp.isPlaying())
+	        		{
+	        			mPlayer.start();
+	        		}
+	        	}
+	        });
+		}
+		
+		try {		
+			mPlayer.setDataSource(runinVideo);
+			sHolder.setFixedSize(	mPlayer.getVideoWidth(),
+									mPlayer.getVideoHeight());
+			mPlayer.prepare();
+			mPlayer.start();
+		} catch (IllegalArgumentException e) {
+			uHandler.sendEmptyMessage(4);
+			e.printStackTrace();
+		} catch (IllegalStateException e) {
+			uHandler.sendEmptyMessage(4);
+			e.printStackTrace();
+		} catch (IOException e) {
+			uHandler.sendEmptyMessage(4);
+			e.printStackTrace();
+		}
+	}
+
 	@Override
 	public void onResume()
 	{
@@ -454,6 +485,8 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
 			Log.e(TAG, "onResume[Now start Media playing...]");
 			mPlayer.start();
 		}
+		Log.d(TAG, "acquire for Wake_Lock");
+        wl.acquire();
 	}
 	
 	@Override
@@ -466,6 +499,8 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
 			isPause = true;
 			mPlayer.pause();
 		}
+		Log.d(TAG, "release for Wake_Lock");
+		wl.release();
 	}
 	
 	@Override

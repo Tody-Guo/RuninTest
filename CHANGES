@@ -1,3 +1,7 @@
+v1.0.4 @ 2013/04/09
+	*) fix black screen issue(release MediaPlayer & apply for new MediaPlayer)
+	*) added Wake_Lock while runing.
+
 v1.0.3 @ 2012/09/03
 	*) add VideoPath into runin.cfg for App can search the video you've specified, default path is /mnt/
 
