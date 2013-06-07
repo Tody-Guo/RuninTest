@@ -1,3 +1,6 @@
+v1.0.5 @ 2013/05/07
+	*) change default runin Time from hours to seconds
+
 v1.0.4 @ 2013/04/09
 	*) fix black screen issue(release MediaPlayer & apply for new MediaPlayer)
 	*) added Wake_Lock while runing.

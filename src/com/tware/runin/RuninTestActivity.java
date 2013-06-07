@@ -57,7 +57,7 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
 	private SurfaceHolder sHolder;
 	private int runTime = 0;
 	private int hour = 0;
-	private int RuninTime = 2; // Define runin time
+	private int RTSEC = 7200; // Define runin time Sec(s)
 	private boolean isStop = false;
 	private boolean isPause = false;
 	private boolean isPass = false;
@@ -106,7 +106,7 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
 						if (strSplit != null && strSplit[0].equalsIgnoreCase("RuninTime"))
 						{
 							Log.i(TAG, "RuninTime defined: " + strSplit[1]);
-							RuninTime = Integer.parseInt(strSplit[1].trim());
+							RTSEC = Integer.parseInt(strSplit[1].trim());
 						}
 						else if(strSplit != null && strSplit[0].equalsIgnoreCase("VideoPath"))
 						{
@@ -181,7 +181,7 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
         	public void run()
         	{
         		runTime ++;
-        		if (hour >= RuninTime)
+        		if (runTime >= RTSEC)
 //        		if (runTime > 600)
         		{
             		uHandler.sendEmptyMessage(5);
@@ -352,7 +352,7 @@ public class RuninTestActivity extends Activity implements SurfaceHolder.Callbac
 					mPlayer.start();
 					uHandler.sendEmptyMessage(0);
 					Toast.makeText(getApplicationContext(), 
-									"Runin Time is " + RuninTime + "H",
+									"Runin Time is " + RTSEC + "Sec(s)",
 									Toast.LENGTH_LONG).show();
 				}
     			break;
